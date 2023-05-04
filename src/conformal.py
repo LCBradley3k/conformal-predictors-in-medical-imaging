@@ -112,10 +112,16 @@ def get_q_hat(calibration_scores, labels, alpha=0.05):
     values, indices = calibration_scores.sort(dim=1, descending=True)
     
     #  sum up all scores cummulatively and return to original index order 
+    #  range(n) is equivalent to using the : symbol for indexing
+    #  cum_scores is a 1D tensor of length n, each slot stating the 
+    #  cumulative sum it took to include the true label.
     cum_scores = values.cumsum(1).gather(1, indices.argsort(1))[range(n), labels]
+    #print(labels)
     
     #  get quantile with small correction for finite sample sizes
     q_hat = torch.quantile(cum_scores, np.ceil((n + 1) * (1 - alpha)) / n)
+    #q_hat = torch.quantile(cum_scores, np.clip(np.ceil((n + 1) * (1 - alpha)) / n, 0, 1))
+
 #     q_hat = np.quantile(cum_scores, np.ceil((n + 1) * (1 - alpha)) / n)
     
     return q_hat
